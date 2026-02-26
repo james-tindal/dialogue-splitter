@@ -1,0 +1,22 @@
+[project]
+name = "dialogue-splitter"
+version = "0.1.0"
+description = "Split video audio into vocal stems and combine with original video"
+requires-python = ">=3.12"
+dependencies = [
+    "audio-separator[cpu]",
+    "torch==2.2.2",
+    "onnxruntime==1.23.2",
+    "numba==0.59.1",
+    "llvmlite==0.42.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pyright",
+]
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/__pycache__"]
