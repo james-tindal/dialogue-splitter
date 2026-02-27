@@ -10,23 +10,14 @@ class SplitResult:
 
 def split_audio(audio_path: str | Path) -> SplitResult:
     """Split audio into vocals and instrumental stems using audio-separator."""
-    import tkinter as tk
-    from tkinter import messagebox
-
-    messagebox.showinfo("Debug", "split_audio called")
-
     from audio_separator.separator import Separator  # type: ignore[import]
 
     audio_path = Path(audio_path)
     output_dir = audio_path.parent
 
-    messagebox.showinfo("Debug", "construct Separator")
     separator = Separator(output_dir=str(output_dir))
-    messagebox.showinfo("Debug", "load Separator model")
     separator.load_model(model_filename="UVR-MDX-NET-Inst_HQ_1.onnx")
-    messagebox.showinfo("Debug", "Separator model loaded. run separate")
     output_files = separator.separate(str(audio_path))
-    messagebox.showinfo("Debug", "separation complete")
 
     vocals_path = None
     instrumental_path = None

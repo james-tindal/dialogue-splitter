@@ -2,9 +2,6 @@ import tempfile
 from pathlib import Path
 from typing import Callable
 
-import tkinter as tk
-from tkinter import messagebox
-
 from .get_percentage import get_percentage
 from .progress_tracker import batch_progress, combine_passes
 from .splitter import SplitResult, split_audio
@@ -17,7 +14,6 @@ def process_batch(
     on_progress: Callable[[dict], None],
 ) -> list[Path]:
     """Process multiple video files, reporting progress to callback."""
-    messagebox.showinfo("Debug", "process_batch called")
     total = len(video_paths)
     event_tracker = batch_progress(total, on_progress)
 
@@ -69,7 +65,6 @@ def process_video(
     on_progress: Callable[[dict], None] | None = None,
 ) -> Path:
     """Process a single video file."""
-    messagebox.showinfo("Debug", "process_video called")
     if on_progress is None:
         on_progress = lambda e: None
     results = process_batch([video_path], on_progress)
