@@ -81,11 +81,27 @@ class MainWindow:
         )
         self.progress_label.pack()
 
-        self.progress_bar = ttk.Progressbar(
+        self.task_progress_label = ttk.Label(
+            self.progress_frame, text="Task: 0%", font=("Arial", 10)
+        )
+        self.task_progress_label.pack()
+
+        self.task_progress_bar = ttk.Progressbar(
             self.progress_frame, length=500, mode="determinate"
         )
-        self.progress_bar["maximum"] = 100
-        self.progress_bar.pack(pady=5)
+        self.task_progress_bar["maximum"] = 100
+        self.task_progress_bar.pack(pady=2)
+
+        self.batch_progress_label = ttk.Label(
+            self.progress_frame, text="Batch: 0%", font=("Arial", 10)
+        )
+        self.batch_progress_label.pack()
+
+        self.batch_progress_bar = ttk.Progressbar(
+            self.progress_frame, length=500, mode="determinate"
+        )
+        self.batch_progress_bar["maximum"] = 100
+        self.batch_progress_bar.pack(pady=2)
 
         self.results_frame = ttk.LabelFrame(
             main_frame, text="Output Files", padding="5"
@@ -149,24 +165,33 @@ class MainWindow:
             return
 
         stage = event.get("stage", "")
-        progress = event.get("progress", 0)
+        task_progress = event.get("task_progress", 0)
+        batch_progress = event.get("batch_progress", 0)
 
-        self.root.after(0, lambda s=stage, p=progress: self.update_progress(s, p))
+        self.root.after(
+            0,
+            lambda s=stage, t=task_progress, b=batch_progress: self.update_progress(
+                s, t, b
+            ),
+        )
 
-    def update_progress(self, stage: str, progress: int):
-        self.progress_label.config(text=f"{stage}: {progress}%")
-        self.progress_bar["value"] = progress
+    def update_progress(self, stage: str, task_progress: int, batch_progress: int):
+        self.progress_label.config(text=f"{stage}")
+        self.task_progress_bar["value"] = task_progress
+        self.task_progress_label.config(text=f"Task: {task_progress}%")
+        self.batch_progress_bar["value"] = batch_progress
+        self.batch_progress_label.config(text=f"Batch: {batch_progress}%")
         self.root.update_idletasks()
 
     def on_complete(self):
         self.progress_label.config(text="Complete!")
-        self.progress_bar["value"] = 100
+        self.task_progress_bar["value"] = 100
+        self.batch_progress_bar["value"] = 100
         self.status_label.config(text="Processing complete!", foreground="green")
 
         for path in self.file_paths:
-            stem = Path(path).stem
             output_dir = Path(path).parent / "splits"
-            output_file = output_dir / f"{stem}_dual_audio.mov"
+            output_file = output_dir / Path(path).name
             self.results_listbox.insert(tk.END, str(output_file))
 
         self.cancel_btn.config(text="Close", command=self.root.destroy)

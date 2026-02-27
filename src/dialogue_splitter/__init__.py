@@ -2,8 +2,8 @@ import tempfile
 from pathlib import Path
 from typing import Callable
 
-from .log_handler import parse_logs
-from .progress_tracker import track_progress
+from .get_percentage import get_percentage
+from .progress_tracker import batch_progress, combine_passes
 from .splitter import SplitResult, split_audio
 from .tqdm_interceptor import TqdmInterceptor
 from .video import combine_dual_audio_video, extract_audio
@@ -15,7 +15,7 @@ def process_batch(
 ) -> list[Path]:
     """Process multiple video files, reporting progress to callback."""
     total = len(video_paths)
-    event_tracker = track_progress(total, on_progress)
+    event_tracker = batch_progress(total, on_progress)
 
     results = []
     for video_path in video_paths:
@@ -34,13 +34,13 @@ def process_batch(
 
             event_tracker({"event": "audio_extraction_complete"})
 
-            log_handler = parse_logs(event_tracker)
+            log_handler = get_percentage(combine_passes(event_tracker))
             with TqdmInterceptor(log_handler):
                 split_result = split_audio(audio_path)
 
             event_tracker({"event": "video_combination_started"})
 
-            output_path = splits_dir / f"{video_path.stem}_dual_audio.mov"
+            output_path = splits_dir / video_path.name
             combine_dual_audio_video(
                 video_path,
                 split_result.vocals_path,

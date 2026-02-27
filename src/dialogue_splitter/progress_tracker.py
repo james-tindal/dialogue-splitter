@@ -1,7 +1,43 @@
 from typing import Callable
 
 
-def track_progress(
+def combine_passes(event_callback: Callable[[dict], None]) -> Callable[[dict], None]:
+    """Aggregate raw percentages from 2-pass tqdm output into 0-100."""
+    in_pass2 = [False]
+    pass1_complete = [False]
+    last_aggregated = [-1]
+
+    def handle_event(event: dict):
+        e = event.get("event")
+        if e != "progress":
+            event_callback(event)
+            return
+
+        raw_percent = event.get("percent", 0)
+
+        if raw_percent == 100:
+            pass1_complete[0] = True
+        elif pass1_complete[0] and raw_percent < 100:
+            in_pass2[0] = True
+
+        if in_pass2[0]:
+            aggregated = 90 + int(raw_percent * 10 / 100)
+        else:
+            aggregated = int(raw_percent * 90 / 100)
+
+        aggregated = min(100, aggregated)
+
+        if aggregated != last_aggregated[0]:
+            last_aggregated[0] = aggregated
+            event_callback({"event": "progress", "percent": aggregated})
+
+            if aggregated == 100:
+                event_callback({"event": "separation_complete"})
+
+    return handle_event
+
+
+def batch_progress(
     total_files: int, progress_callback: Callable[[dict], None]
 ) -> Callable[[dict], None]:
     """Create an event tracker that calculates global progress and emits to callback."""
@@ -27,10 +63,8 @@ def track_progress(
         elif e == "file_started":
             file_index[0] += 1
             current_stage[0] = f"Processing file {file_index[0]} of {total_files}"
-            stage_complete.clear()
-            stage_complete.update(
-                {"extract": False, "separate": False, "combine": False}
-            )
+            stage_complete["separate"] = False
+            stage_complete["combine"] = False
             separate_percent[0] = 0
             _emit()
 
@@ -55,8 +89,10 @@ def track_progress(
             _emit()
 
     def _emit():
+        task_progress_val = int(separate_percent[0])
+
         if file_index[0] == 0:
-            output = {"stage": "Starting...", "progress": 0}
+            output = {"stage": "Starting...", "batch_progress": 0, "task_progress": 0}
             if last_emit[0] != output:
                 last_emit[0] = output
                 progress_callback(output)
@@ -82,7 +118,11 @@ def track_progress(
             stage_p = 0
 
         total_p = int(base + (stage_p / total_files))
-        output = {"stage": current_stage[0], "progress": total_p}
+        output = {
+            "stage": current_stage[0],
+            "batch_progress": total_p,
+            "task_progress": task_progress_val,
+        }
 
         if last_emit[0] != output:
             last_emit[0] = output
