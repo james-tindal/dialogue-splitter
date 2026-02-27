@@ -17,7 +17,6 @@ def split_audio(audio_path: str | Path) -> SplitResult:
 
     separator = Separator(output_dir=str(output_dir))
     separator.load_model(model_filename="UVR-MDX-NET-Inst_HQ_1.onnx")
-
     output_files = separator.separate(str(audio_path))
 
     vocals_path = None
