@@ -16,6 +16,10 @@ dev = [
     "pytest",
     "pyright",
 ]
+gui = []
+
+[project.scripts]
+dialogue-splitter = "dialogue_splitter_gui:main"
 
 [tool.pyright]
 include = ["src"]
