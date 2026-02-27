@@ -158,7 +158,7 @@ class MainWindow:
             process_batch(cast(list[str | Path], self.file_paths), self.on_progress)
             self.root.after(0, self.on_complete)
         except Exception as e:
-            self.root.after(0, lambda: self.on_error(str(e)))
+            self.root.after(0, lambda err=str(e): self.on_error(err))
 
     def on_progress(self, event: dict):
         if self.cancelled:
@@ -195,6 +195,11 @@ class MainWindow:
             self.results_listbox.insert(tk.END, str(output_file))
 
         self.cancel_btn.config(text="Close", command=self.root.destroy)
+
+        import os
+
+        os.system("say -v Alice 'finito [[slnc 200]]'")
+        self.root.after(2000, self.root.destroy)
 
     def on_error(self, error_msg: str):
         self.progress_label.config(text=f"Error: {error_msg}")
