@@ -1,11 +1,32 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+from PyInstaller.utils.hooks import collect_all, collect_submodules, collect_data_files
+
+ffmpeg_lib = '/usr/local/Cellar/ffmpeg/7.1_4/lib'
+ffmpeg_binaries = []
+for f in os.listdir(ffmpeg_lib):
+    if f.endswith('.dylib'):
+        ffmpeg_binaries.append((os.path.join(ffmpeg_lib, f), '.'))
+
+# Collect all from audio_separator and its dependencies
+datas_audio, binaries_audio, hiddenimports_audio = collect_all('audio_separator')
+datas_onnx, binaries_onnx, hiddenimports_onnx = collect_all('onnxruntime')
+datas_torch, binaries_torch, hiddenimports_torch = collect_all('torch')
+datas_torchaudio, binaries_torchaudio, hiddenimports_torchaudio = collect_all('torchaudio')
+datas_librosa, binaries_librosa, hiddenimports_librosa = collect_all('librosa')
+
+# Combine everything
+datas = datas_audio + datas_onnx + datas_torch + datas_torchaudio + datas_librosa + [('resources', 'resources')]
+binaries = binaries_audio + binaries_onnx + binaries_torch + binaries_torchaudio + binaries_librosa + [('/usr/local/bin/ffmpeg', '.')] + ffmpeg_binaries
+hiddenimports = hiddenimports_audio + hiddenimports_onnx + hiddenimports_torch + hiddenimports_torchaudio + hiddenimports_librosa + ['importlib.metadata']
+
 a = Analysis(
     ['src/dialogue_splitter_gui.py'],
     pathex=['src'],
-    binaries=[],
-    datas=[('resources', 'resources')],
-    hiddenimports=[],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -55,6 +76,9 @@ app = BUNDLE(
         'CFBundleExecutable': 'Dialogue Splitter',
         'LSMinimumSystemVersion': '10.13',
         'NSPrincipalClass': 'NSApplication',
+        'LSEnvironment': {
+            'PATH': '@executable_path/../Frameworks'
+        },
         'CFBundleDocumentTypes': [
             {
                 'CFBundleTypeName': 'Video File',
