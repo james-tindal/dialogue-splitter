@@ -1,7 +1,7 @@
 [project]
 name = "dialogue-splitter"
 version = "0.1.0"
-description = "Split video audio into vocal stems and combine with original video"
+description = "Video voice isolation"
 requires-python = ">=3.12"
 dependencies = [
     "audio-separator[cpu]",
